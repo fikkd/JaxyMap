@@ -1,11 +1,16 @@
 package com.scott.service;
 
+import java.util.concurrent.CountDownLatch;
+
 public interface IBusiness {
 		
+	void testFun();
 	
-	void copyToQyInfoMap();
+	int getPage();
 	
-	void setLocation();
+	void copyToQyInfoMap(CountDownLatch latch, int page);
+	
+	void setLocation(CountDownLatch latch, int page);
 	
 	void generateLevelData(String pre, String next, int cell);
 	

@@ -1,6 +1,7 @@
 package com.scott.thread;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import com.scott.dao.FiDAO;
 import com.scott.model.QyInfo;
@@ -14,17 +15,20 @@ import com.scott.model.QyInfo;
  */
 public class ManualQyInfoMapTask implements Runnable {
 
+	private CountDownLatch latch;
 	private List<QyInfo> list;
 	private FiDAO fiDAO;
 
-	public ManualQyInfoMapTask(List<QyInfo> list, FiDAO fiDAO) {
+	public ManualQyInfoMapTask(CountDownLatch latch, List<QyInfo> list, FiDAO fiDAO) {
+		this.latch = latch;
 		this.list = list;
 		this.fiDAO = fiDAO;
 	}
 
 	@Override
 	public void run() {
-		fiDAO.saveQyInfoMap(list);
+		fiDAO.saveQyInfoMap(list);		
+		latch.countDown();
 	}
 
 }

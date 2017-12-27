@@ -15,6 +15,25 @@ import com.scott.model.QyInfo_Map_Level;
 public class FiDAO extends NDAO {
 
 	
+	
+	public void testFun() {
+		Session session = null;
+		Transaction ts = null;
+		try {
+			session = this.getSessionFactory().openSession();
+			ts = session.beginTransaction();
+			List<?> list = session.createSQLQuery("select * from ANIMAL t ").list();
+			System.out.println(list.size());
+			ts.commit();
+		} catch (Exception e) {
+			ts.rollback();
+		} finally {
+			session.close();
+		}
+		
+	}
+	
+	
 	public int findCountOfENTER_BASIC_INFO() {
 		List<Object> params = new ArrayList<>();
 		return this.findCountBySQLQuery("select count(*) from ENTER_BASIC_INFO", params.toArray());
@@ -79,17 +98,12 @@ public class FiDAO extends NDAO {
 	}
 	
 	
-	public int findCountOfQyInfoMap() {
-		List<Object> params = new ArrayList<>();
-		return this.findCountsByHql("select count(*) from QyInfo_Map", params.toArray());
-	}
-	
 	@SuppressWarnings("unchecked")
 	public List<QyInfo_Map> findQyInfoMapByPage(int i) {
 		return this.findPageByHql("from QyInfo_Map where m_lng is null", new Object[] {}, i * 10, 10);
 	}
 	
-	// 最大经度
+	/** 最大经度 */
 	@SuppressWarnings("unchecked")
 	public Double getMaxLng(String value) {
 		List<String> list;
@@ -101,7 +115,7 @@ public class FiDAO extends NDAO {
 		
 	}
 
-	//最小经度
+	/** 最小经度 */
 	@SuppressWarnings("unchecked")
 	public Double getMinLng(String value) {
 		List<String> list;
@@ -112,7 +126,7 @@ public class FiDAO extends NDAO {
 		return Double.valueOf(list.get(0));
 	}
 
-	//最大纬度
+	/** 最大纬度 */
 	@SuppressWarnings("unchecked")
 	public Double getMaxLat(String value) {
 		List<String> list;
@@ -123,7 +137,7 @@ public class FiDAO extends NDAO {
 		return Double.valueOf(list.get(0));
 	}
 
-	//最小纬度
+	/** 最小纬度 */
 	@SuppressWarnings("unchecked")
 	public Double getMinLat(String value) {
 		List<String> list;

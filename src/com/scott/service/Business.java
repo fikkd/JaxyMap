@@ -1,8 +1,7 @@
 package com.scott.service;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CountDownLatch;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -38,17 +37,32 @@ public class Business implements IBusiness {
 	
 	
 	@Override
-	public void copyToQyInfoMap() {
-
+	public void testFun() {
+		
+		fiDAO.testFun();
+	}
+	
+	
+	
+	
+	
+	
+	@Override
+	public int getPage() {
 		int count = fiDAO.findCountOfENTER_BASIC_INFO();
-		int page = (count % 10 == 0) ? count / 10 : count / 10 + 1;
+		System.out.println("ENTER_BASIC_INFO表总数量\t" + count);
+		return (count % 10 == 0) ? count / 10 : count / 10 + 1;
+	}
+	
+	@Override
+	public void copyToQyInfoMap(CountDownLatch latch, int page) {
 
 		List<QyInfo> list;
 		Runnable task;
 		for (int i = 0; i < page; i++) {
 			list = fiDAO.findQyInfoByPage(i);
 			if (list != null) {
-				task = new ManualQyInfoMapTask(list, fiDAO);
+				task = new ManualQyInfoMapTask(latch, list, fiDAO);
 				taskExecutor.execute(task);
 			}
 		}
@@ -56,31 +70,20 @@ public class Business implements IBusiness {
 	
 	
 	@Override
-	public void setLocation() {
+	public void setLocation(CountDownLatch latch, int page) {
 		
 		ApplicationContext context = CommonUtil.getSpringApplicationContext();
 		KParam param = (KParam) context.getBean("kParam");
-		
-		int count = fiDAO.findCountOfQyInfoMap();
-		int page = (count % 10 == 0) ? count / 10 : count / 10 + 1;
 
-		ExecutorService pool = Executors.newFixedThreadPool(20);
 		List<QyInfo_Map> list;
-		int size;
-		QyInfo_Map info;
 		Runnable task;
 		for (int i = 0; i < page; i++) {
 			list = fiDAO.findQyInfoMapByPage(i);
 			if (list != null) {
-				size = list.size();
-				for (int j = 0; j < size; j++) {
-					info = list.get(j);
-					task = new LocationTask(info, fiDAO, param);
-					pool.execute(task);
-				}
+				task = new LocationTask(latch, list, fiDAO, param);
+				taskExecutor.execute(task);
 			}
 		}
-		pool.shutdown();
 	}
 	
 	

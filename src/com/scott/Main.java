@@ -2,6 +2,7 @@ package com.scott;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 import org.springframework.context.ApplicationContext;
 
@@ -14,27 +15,56 @@ public class Main {
 		ApplicationContext context = CommonUtil.getSpringApplicationContext();
 		IBusiness service = (IBusiness) context.getBean("business");
 
-		/** 
-		 * 第一步
-		 * 将原始企业信息表中数据拷贝到信用地图专用使用的企业信息表qyinfo_Map中  */
-		service.copyToQyInfoMap();
+		run(service);
 		
-		/**
-		 * 第二步
-		 * 查询百度API
-	     * 给Qyinfo_Map表中的企业名称设置对应的经纬度, 从而方便在地图上展示
-		 */
-		service.setLocation();
+	}
+	
+	public static void run(IBusiness service) {
+		int page = service.getPage();
+		CountDownLatch latch = new CountDownLatch(page);
+		System.out.println("第一步开始");
+		try {
+			
+			/**
+			 * 第一步 将原始企业信息表中数据拷贝到信用地图专用使用的企业信息表qyinfo_Map中
+			 */
+			service.copyToQyInfoMap(latch, page);
+			latch.await();
+		} catch (InterruptedException e) {
+
+		}
+		System.out.println("第一步完成");
+		
+		
+		
+		CountDownLatch latc = new CountDownLatch(page);
+		System.out.println("第二步开始");		
+		try {
+			/**
+			 * 第二步
+			 * 查询百度API
+		     * 给Qyinfo_Map表中的企业名称设置对应的经纬度, 从而方便在地图上展示
+			 */
+			service.setLocation(latc, page);
+			latc.await();
+		} catch (InterruptedException e) {
+			
+		}
+		System.out.println("第二步完成");
+		
+		
+		
+		System.out.println("第三步开始");
 		
 		/**
 		 * 第三步
 		 * 
-		 * 根据既定[规则]生成各个地图层级所需要的数据 最后一层级的数据已经在第二步骤生成且保存在Qyinfo_Map表中
+		 * 根据既定[规则]生成地图各个层级所需要的数据 
+		 * 最后一层级的数据已经在第二步骤生成且保存在Qyinfo_Map表中
 		 * 其他层级的数据由下一层级而生成且保存在Qyinfo_Map_Level表中
 		 * 
 		 * 规则: 根据最简单的聚合算法和自己设定的一部分规则值 */
-		Map<String, Integer> map = new HashMap<>();
-		
+		Map<String, Integer> map = new HashMap<>();		
 		/**
 		 * 规定每个层级对应的单元格大小
 		 */
@@ -59,16 +89,19 @@ public class Main {
 		 * cdefghijklmnopqrs中的每个字母代表一个层级
 		 * 百度地图的层级zoom取值范围[3,19],因此设计对应的字母分别为[c-s]
 		 */
-		String levels = "cdefghijklmnopqrs";
-		
-		
+		String levels = "cdefghijklmnopqrs";			
 		String[] arr = "c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r".split(",");
 		
 
-		for (String zoom : arr) {			
+		for (String zoom : arr) {
 			generateLevelData(map, levels, zoom, service);
 		}
+		
+		System.out.println("第三步完成");
+		
 	}
+	
+	
 	
 	public static void generateLevelData(Map<String, Integer> map, String levels, String zoom, IBusiness service) {
 		try {
