@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+   "-//Hibernate/Hibernate Mapping DTD//EN"
+   "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="com.scott.model" auto-import="true">
+	<class name="QyInfo_Map_Level" table="QyInfo_Map_Level">
+		<id name="id">
+			<column name="id" not-null="true" length="32" />
+			<generator class="uuid.hex">
+			</generator>
+		</id>
+		<property name="m_lng" lazy="false">
+			<column name="m_lng" length="15" />
+		</property>
+		<property name="m_lat" lazy="false">
+			<column name="m_lat" length="15" />
+		</property>
+		<property name="m_count" lazy="false">
+			<column name="m_count" length="20" />
+		</property>
+		<property name="m_count_qy" lazy="false" type="java.lang.Integer">
+			<column name="m_count_qy"  />
+		</property>
+		<property name="m_range" lazy="false">
+			<column name="m_range" length="100" />
+		</property>
+		<property name="m_zoom_level_c" lazy="false">
+			<column name="m_zoom_level_c" length="2" />
+		</property>
+		<property name="m_zoom_level_d" lazy="false">
+			<column name="m_zoom_level_d" length="2" />
+		</property>
+		<property name="m_zoom_level_e" lazy="false">
+			<column name="m_zoom_level_e" length="2" />
+		</property>
+		<property name="m_zoom_level_f" lazy="false">
+			<column name="m_zoom_level_f" length="2" />
+		</property>
+		<property name="m_zoom_level_g" lazy="false">
+			<column name="m_zoom_level_g" length="2" />
+		</property>
+		<property name="m_zoom_level_h" lazy="false">
+			<column name="m_zoom_level_h" length="2" />
+		</property>
+		<property name="m_zoom_level_i" lazy="false">
+			<column name="m_zoom_level_i" length="2" />
+		</property>
+		<property name="m_zoom_level_j" lazy="false">
+			<column name="m_zoom_level_j" length="2" />
+		</property>
+		<property name="m_zoom_level_k" lazy="false">
+			<column name="m_zoom_level_k" length="2" />
+		</property>
+		<property name="m_zoom_level_l" lazy="false">
+			<column name="m_zoom_level_l" length="2" />
+		</property>
+		<property name="m_zoom_level_m" lazy="false">
+			<column name="m_zoom_level_m" length="2" />
+		</property>
+		<property name="m_zoom_level_n" lazy="false">
+			<column name="m_zoom_level_n" length="2" />
+		</property>
+		<property name="m_zoom_level_o" lazy="false">
+			<column name="m_zoom_level_o" length="2" />
+		</property>
+		<property name="m_zoom_level_p" lazy="false">
+			<column name="m_zoom_level_p" length="2" />
+		</property>
+		<property name="m_zoom_level_q" lazy="false">
+			<column name="m_zoom_level_q" length="2" />
+		</property>
+		<property name="m_zoom_level_r" lazy="false">
+			<column name="m_zoom_level_r" length="2" />
+		</property>
+	</class>
+</hibernate-mapping>

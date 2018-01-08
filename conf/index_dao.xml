@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>conf/db.properties</value><!-- 可以指定多个文件 -->
+			</list>
+		</property>
+	</bean>
+
+	<bean id="proxoolDataSource" class="org.logicalcobwebs.proxool.ProxoolDataSource">
+		<property name="alias" value="alias" />
+		<property name="driver" value="oracle.jdbc.driver.OracleDriver" />
+		<property name="driverUrl" value="jdbc:oracle:thin:@${db.dUrl}" />
+		<property name="user" value="${db.user}" />
+		<property name="password" value="${db.password}" />
+		<property name="minimumConnectionCount" value="3" />
+		<property name="maximumConnectionCount" value="10" />
+		<property name="delegateProperties" value="autoCommit=true, foo=5" />
+	</bean>  
+	
+	<bean id="index_SessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource">
+			<ref bean="proxoolDataSource" />
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect</prop>
+				<prop key="hibernate.connection.SetBigStringTryClob">true</prop>
+				<prop key="hibernate.show_sql">true</prop>
+			</props>
+		</property>
+		
+		<property name="mappingResources">
+			<list>
+				<value>com/scott/model/hbm/NamedQuery.xml</value>
+				<value>com/scott/model/hbm/QyInfo_Map.hbm.xml</value>
+				<value>com/scott/model/hbm/QyInfo_Map_Level.hbm.xml</value>
+			</list>
+		</property>
+		
+	</bean>
+	<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory">
+			<ref bean="index_SessionFactory" />
+		</property>
+	</bean>
+	
+	<bean id="nativeJdbcExtractor" class="org.springframework.jdbc.support.nativejdbc.CommonsDbcpNativeJdbcExtractor" lazy-init="true" />
+	<bean id="lobHandler" class="org.springframework.jdbc.support.lob.DefaultLobHandler"></bean>
+</beans>

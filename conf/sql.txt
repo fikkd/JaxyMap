@@ -1,0 +1,11 @@
+create table qyinfo_map(
+	ID     									VARCHAR2(32),
+	C_NAME 								VARCHAR2(500),
+	C_SOCIAL_CREDIT_CODE   VARCHAR2(30),
+	ESTART_TIME           			date,
+	LEGAL_REPRESENTATIVE 	VARCHAR2(512),
+	RES_ADDRESS 					VARCHAR2(200),
+	REG_CAPITAL 						NUMBER(12,4),
+  	M_LNG   								VARCHAR2(15),	--¾­¶È
+  	M_LAT									VARCHAR2(15)	--Î³¶È
+);
