@@ -1,1 +1,0 @@
-1、ENTER_BASIC_INFO 表中的数据在向qyinfo_map 表中转移时,它们的主键是一致的.
