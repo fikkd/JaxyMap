@@ -1,6 +1,8 @@
 package com.scott.thread;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -20,13 +22,14 @@ import com.scott.model.QyInfo_Map;
 public class LocationTask implements Runnable {
 
 	private CountDownLatch latch;
+	private Properties prop;
 	private List<QyInfo_Map> list;
 	private KParam param;
-	private GetMethod method;
 	private FiDAO fiDAO;
 
-	public LocationTask(CountDownLatch latch, List<QyInfo_Map> list, FiDAO fiDAO, KParam param) {
+	public LocationTask(CountDownLatch latch, Properties prop, List<QyInfo_Map> list, FiDAO fiDAO, KParam param) {
 		this.latch = latch;
+		this.prop = prop;
 		this.list = list;
 		this.fiDAO = fiDAO;
 		this.param = param;
@@ -35,40 +38,41 @@ public class LocationTask implements Runnable {
 	@Override
 	public void run() {
 		HttpClient client = new HttpClient();
+		String url = prop.get("url").toString();
+		for (QyInfo_Map info : list) {
+			setLocation(client, info, url);
+		}
+
+		latch.countDown();
+	}
+
+	// http://api.map.baidu.com/lbsapi/geocoding-api.htm
+	public void setLocation(HttpClient client, QyInfo_Map info, String url) {
+		GetMethod method = null;
 		try {
-			
-			for (QyInfo_Map info : list) {
-				setLocation(client, info);				
+			url = url + java.net.URLEncoder.encode(info.getC_name(), "UTF-8")
+					+ "&output=json&key=zkcsXqlktTGQLBcgqGXLBKZu&city="
+					+ java.net.URLEncoder.encode(param.getCityName(), "UTF-8");
+
+			method = new GetMethod(url);
+
+			client.executeMethod(method);
+			if (method.getStatusCode() == 200) {
+				String reString = method.getResponseBodyAsString();
+				reString = reString.replaceAll("(?s).*\"lng\":(\\d*\\.\\d*).*\"lat\":(\\d*\\.\\d*).*", "$1,$2");
+				if (reString.matches(".*\\d.*")) { // 如果替换成功
+					String[] arr = reString.split(",");
+					info.setM_lng(arr[0]);
+					info.setM_lat(arr[1]);
+					fiDAO.updateMap(info);
+				}
 			}
-		} catch (Exception e) {
+		} catch (Exception ignore) {
 
 		} finally {
 			method.releaseConnection();
 		}
-		latch.countDown();
-	}
-	
-	// http://api.map.baidu.com/lbsapi/geocoding-api.htm
-	public void setLocation(HttpClient client, QyInfo_Map info) throws Exception {
-		String url = "http://api.map.baidu.com/geocoder?address=" + java.net.URLEncoder.encode(info.getQymc(), "UTF-8")
-				+ "&output=json&key=zkcsXqlktTGQLBcgqGXLBKZu&city="
-				+ java.net.URLEncoder.encode(param.getCityName(), "UTF-8");
-		
-		method = new GetMethod(url);
 
-		client.executeMethod(method);
-		if (method.getStatusCode() == 200) {
-			String reString = method.getResponseBodyAsString();
-			reString = reString.replaceAll("(?s).*\"lng\":(\\d*\\.\\d*).*\"lat\":(\\d*\\.\\d*).*", "$1,$2");
-			if (reString.matches(".*\\d.*")) { // 如果替换成功
-				String[] arr = reString.split(",");
-				info.setM_lng(arr[0]);
-				info.setM_lat(arr[1]);
-				fiDAO.update(info);
-			}
-		}
-		
 	}
-	
-	
+
 }

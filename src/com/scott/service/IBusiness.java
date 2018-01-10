@@ -6,11 +6,15 @@ import java.util.concurrent.CountDownLatch;
 
 public interface IBusiness {
 	
+	void moveData(CountDownLatch latch, Map<String, String> map, Properties prop);
+
 	void saveQyInfoMap(String tName, String tColumns, Properties prop);
 	
-	void moveData(CountDownLatch latch, Map<String, String> map, Properties prop);
+	int getPageCountOfMap();
 	
-	void setLocation(CountDownLatch latch, int page);
+	void deleteMapLevel();
+	
+	void setLocation(CountDownLatch latch, Properties prop, int page);
 	
 	void generateLevelData(String pre, String next, int cell);
 	

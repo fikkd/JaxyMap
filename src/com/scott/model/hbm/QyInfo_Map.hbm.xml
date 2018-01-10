@@ -9,17 +9,31 @@
 			<generator class="assigned">
 			</generator>
 		</id>
-		<property name="qymc" lazy="false">
-			<column name="qymc" length="300" />
+		<property name="c_name" lazy="false">
+			<column name="c_name" length="500" />
 		</property>
+		<property name="c_social_credit_code" lazy="false">
+			<column name="c_social_credit_code" length="30" />
+		</property>
+<!-- 		
+		<property name="estart_time" type="date" lazy="false">
+			<column name="estart_time" />
+		</property> -->
+		<property name="legal_representative" lazy="false">
+			<column name="legal_representative" length="512" />
+		</property>
+		<property name="res_address" lazy="false">
+			<column name="res_address" length="200" />
+		</property>
+<!-- 		
+		<property name="reg_capital" lazy="false">
+			<column name="reg_capital" length="12" />
+		</property> -->
 		<property name="m_lng" lazy="false">
 			<column name="m_lng" length="15" />
 		</property>
 		<property name="m_lat" lazy="false">
 			<column name="m_lat" length="15" />
-		</property>
-		<property name="m_count" lazy="false">
-			<column name="m_count" length="10" />
 		</property>
 	</class>
 </hibernate-mapping>

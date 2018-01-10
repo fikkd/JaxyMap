@@ -7,7 +7,7 @@ import com.scott.service.IBusiness;
 
 /**
  * 
- * 将源企业信息表中数据拷贝到信用地图专用使用的企业信息表qyinfo_Map中
+ * 将源企业信息表中数据拷贝到信用地图专用的企业信息表qyinfo_Map中
  *
  */
 public class MoveDataTask implements Runnable {

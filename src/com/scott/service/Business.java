@@ -25,70 +25,30 @@ public class Business implements IBusiness {
 	private FiDAO fiDAO;
 	private ThreadPoolTaskExecutor taskExecutor;
 
-	public FiDAO getFiDAO() {
-		return fiDAO;
-	}
-	public void setFiDAO(FiDAO fiDAO) {
-		this.fiDAO = fiDAO;
-	}
-	public ThreadPoolTaskExecutor getTaskExecutor() {
-		return taskExecutor;
-	}
-	public void setTaskExecutor(ThreadPoolTaskExecutor taskExecutor) {
-		this.taskExecutor = taskExecutor;
-	}
-
-	
+	/**
+	 * 
+	 * 删除QYINFO_MAP_LEVEL表所有数据
+	 * 为了重新构造各个层级数据做准备
+	 * 
+	 *
+	 * @变更记录 2018年1月10日 上午9:53:03 李瑞辉 创建
+	 *
+	 */
 	@Override
-	public void moveData(CountDownLatch latch, Map<String, String> map, Properties prop) {
-
-		Set<String> set = map.keySet();
-		Iterator<String>it = set.iterator();
+	public void deleteMapLevel() {
 		
-		while (it.hasNext()) {
-			String tName = it.next();
-			Runnable task = new MoveDataTask(this, latch, tName, map.get(tName), prop);
-			taskExecutor.execute(task);
-		}
+		fiDAO.deleteMapLevel();
 	}
-	
-	@Override
-	public void saveQyInfoMap(String tName, String tColumns, Properties prop) {
-		
-		int count = fiDAO.getPageCount(tName);		
-		int page = (count % 10 == 0) ? count / 10 : count / 10 + 1;
-		
-		String table = prop.get("tName").toString();
-		String columns = prop.get("tColumns").toString();
-		
-		for (int i = 0; i < page; i++) {			
-			List<Object[]> list = fiDAO.findQyInfoByPage(i, tName, tColumns);
-			fiDAO.saveQyInfoMap(list, table, columns);
-		}
-		
+	/*
+	 * Double类型拼接成字符串
+	 * 
+	 * 首先拼接成字符串000.0000000000,000.000000000,000.000000000,000.000000000
+	 * 其次通过正则调整为小数点后面保留6位的格式 000.000000,000.000000,000.000000,000.000000
+	 * 
+	 */
+	private String doubleToString(Double LNG_F, Double LNG_B, Double LAT_F, Double LAT_B) {		
+		return new StringBuffer().append(LNG_F).append(",").append(LNG_B).append(",").append(LAT_F).append(",").append(LAT_B).toString().replaceAll("(\\d{1,}\\.\\d{6})\\d*(,\\d{1,}\\.\\d{6})\\d*(,\\d{1,}\\.\\d{6})\\d*(,\\d{1,}\\.\\d{6})\\d*", "$1$2$3$4");		
 	}
-	
-	
-	
-	
-	@Override
-	public void setLocation(CountDownLatch latch, int page) {
-		
-		ApplicationContext context = CommonUtil.getSpringApplicationContext();
-		KParam param = (KParam) context.getBean("kParam");
-
-		List<QyInfo_Map> list;
-		Runnable task;
-		for (int i = 0; i < page; i++) {
-			list = fiDAO.findQyInfoMapByPage(i);
-			if (list != null) {
-				task = new LocationTask(latch, list, fiDAO, param);
-				taskExecutor.execute(task);
-			}
-		}
-	}
-	
-	
 	@Override
 	public void generateLevelData(String pre, String next, int cell) {
 		
@@ -151,6 +111,41 @@ public class Business implements IBusiness {
 			}
 		}
 	}
+	public FiDAO getFiDAO() {
+		return fiDAO;
+	}
+
+	
+	/**
+	 * 
+	 * 查询信用地图专用表总数量
+	 * 
+	 * @return
+	 *
+	 * @变更记录 2018年1月9日 上午12:02:20 李瑞辉 创建
+	 *
+	 */
+	public int getPageCountOfMap() {
+		
+		return fiDAO.getPageCountOfMap();		
+	}
+	
+	public ThreadPoolTaskExecutor getTaskExecutor() {
+		return taskExecutor;
+	}
+	
+	@Override
+	public void moveData(CountDownLatch latch, Map<String, String> map, Properties prop) {
+
+		Set<String> set = map.keySet();
+		Iterator<String>it = set.iterator();
+		
+		while (it.hasNext()) {
+			String tName = it.next();
+			Runnable task = new MoveDataTask(this, latch, tName, map.get(tName), prop);
+			taskExecutor.execute(task);
+		}
+	}
 	
 	/**
 	 * 查询指定范围方格内数据进行计算
@@ -176,13 +171,12 @@ public class Business implements IBusiness {
 		/**
 		 *  范围数据为空
 		 */
-		if (null == list) {
+		if (null == list || list.size() == 0) {
 			return;
 		}
 
 		int size = list.size();
-		if (size == 0) {// 方格内没有点
-		} else if (size == 1) {// 方格内只有一点
+		if (size == 1) {// 方格内只有一点
 			QyInfo_Map_Level map = list.get(0);
 
 			fiDAO.saveMap(map.getM_lng(), map.getM_lat(), map.getM_count_qy(), sRange, pre);
@@ -202,6 +196,8 @@ public class Business implements IBusiness {
 		}
 	}
 	
+	
+	
 	/*
 	 * 生成r层级数据
 	 *
@@ -210,13 +206,12 @@ public class Business implements IBusiness {
 		/**
 		 * 范围数据为空
 		 */
-		if (null == list) {
+		if (null == list || list.size() == 0) {
 			return;
 		}
 
 		int size = list.size();
-		if (size == 0) {// 方格内没有点
-		} else if (size == 1) {// 方格内只有一点
+		if (size == 1) {// 方格内只有一点
 			QyInfo_Map map = list.get(0);
 
 			fiDAO.saveMap(map.getM_lng(), map.getM_lat(), 1, sRange, pre);
@@ -234,16 +229,69 @@ public class Business implements IBusiness {
 		}
 	}
 	
-	
-	/*
-	 * Double类型拼接成字符串
+	/**
 	 * 
-	 * 首先拼接成字符串000.0000000000,000.000000000,000.000000000,000.000000000
-	 * 其次通过正则调整为小数点后面保留6位的格式 000.000000,000.000000,000.000000,000.000000
+	 * 源企业表数据存入信用地图专用表
 	 * 
+	 * @param tName
+	 * @param tColumns
+	 * @param prop
+	 *
+	 * @变更记录 2018年1月8日 下午11:59:26 李瑞辉 创建
+	 *
 	 */
-	private String doubleToString(Double LNG_F, Double LNG_B, Double LAT_F, Double LAT_B) {		
-		return new StringBuffer().append(LNG_F).append(",").append(LNG_B).append(",").append(LAT_F).append(",").append(LAT_B).toString().replaceAll("(\\d{1,}\\.\\d{6})\\d*(,\\d{1,}\\.\\d{6})\\d*(,\\d{1,}\\.\\d{6})\\d*(,\\d{1,}\\.\\d{6})\\d*", "$1$2$3$4");		
+	@Override
+	public void saveQyInfoMap(String tName, String tColumns, Properties prop) {
+		
+		int count = fiDAO.getPageCount(tName);		
+		int page = (count % 10 == 0) ? count / 10 : count / 10 + 1;
+		
+		String table = prop.get("tName").toString();
+		String columns = prop.get("tColumns").toString();
+		
+		for (int i = 0; i < page; i++) {	
+			// 分页查询源企业信息表数据
+			List<Object[]> list = fiDAO.findQyInfoByPage(i, tName, tColumns);
+			// 数据存入信用地图专用企业信息表中
+			fiDAO.saveQyInfoMap(list, table, columns);
+		}
+		
+	}
+	
+	public void setFiDAO(FiDAO fiDAO) {
+		this.fiDAO = fiDAO;
+	}
+	
+	/**
+	 * 
+	 * 设置坐标
+	 * 
+	 * @param latch
+	 * @param page
+	 *
+	 * @变更记录 2018年1月8日 下午11:58:35 李瑞辉 创建
+	 *
+	 */
+	@Override
+	public void setLocation(CountDownLatch latch, Properties prop, int page) {
+		
+		ApplicationContext context = CommonUtil.getSpringApplicationContext();
+		KParam param = (KParam) context.getBean("kParam");
+
+		List<QyInfo_Map> list;
+		Runnable task;
+		for (int i = 0; i < page; i++) {
+			list = fiDAO.findQyInfoMapByPage(i);
+			if (list != null) {
+				task = new LocationTask(latch, prop, list, fiDAO, param);
+				taskExecutor.execute(task);
+			}
+		}
+	}
+	
+	
+	public void setTaskExecutor(ThreadPoolTaskExecutor taskExecutor) {
+		this.taskExecutor = taskExecutor;
 	}
 
 }

@@ -53,14 +53,14 @@ public class Main {
 		
 		
 		stepA(service, map, prop);
-		stepB(service, prop);
-		
+		stepB(service, prop);		
+		stepC(service);
 		
 	}
 	
 	/**
 	 * 第一步
-	 * 将源企业信息表中数据拷贝到信用地图专用使用的企业信息表qyinfo_Map中
+	 * 将源企业信息表(4张表)中主要字段的数据拷贝到信用地图专用的企业信息表qyinfo_Map中
 	 *
 	 */
 	private static void stepA(IBusiness service, Map<String, String> map, Properties prop) {
@@ -78,14 +78,17 @@ public class Main {
 	/**
 	 * 第二步
 	 * 查询百度API
-     * 给Qyinfo_Map表中的企业名称设置对应的经纬度, 从而方便在地图上展示
+     * 给qyinfo_map表中的企业设置对应的经纬度, 从而方便在地图上展示
 	 */
 	private static void stepB(IBusiness service, Properties prop) {
-		CountDownLatch latc = new CountDownLatch(0);
 		System.out.println("第二步开始");		
-		try {
-			
-			service.setLocation(latc, 0);
+		
+		int count = service.getPageCountOfMap();
+		int page = (count % 10 == 0) ? count / 10 : count / 10 + 1;
+		
+		CountDownLatch latc = new CountDownLatch(page);
+		try {			
+			service.setLocation(latc, prop, page);
 			latc.await();
 		} catch (InterruptedException e) {
 			
@@ -103,7 +106,6 @@ public class Main {
 	 * 规则: 根据最简单的聚合算法和自己设定的一部分规则值 */
 	private static void stepC(IBusiness service) {
 		System.out.println("第三步开始");
-		
 		
 		Map<String, Integer> map = new HashMap<>();		
 		/**
@@ -131,9 +133,15 @@ public class Main {
 		 * 百度地图的层级zoom取值范围[3,19],因此设计对应的字母分别为[c-s]
 		 */
 		String levels = "cdefghijklmnopqrs";			
-		String[] arr = "c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r".split(",");
+		String[] arr = "r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c".split(",");		
 		
-
+		
+		/**
+		 * 删除之前的数据
+		 * 为了重新构造数据做准备
+		 */
+		service.deleteMapLevel();
+		
 		for (String zoom : arr) {
 			generateLevelData(map, levels, zoom, service);
 		}
@@ -148,6 +156,10 @@ public class Main {
 			/** 被计算的层级的单元格大小 */
 			int cell = map.get(arr[0]);
 
+			/**
+			 * arr[0]被计算层级
+			 * arr[1]已知的下一层级
+			 */
 			service.generateLevelData(arr[0], arr[1], cell);
 		} catch (Exception e) {
 			

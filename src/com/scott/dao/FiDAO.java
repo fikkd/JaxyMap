@@ -20,12 +20,72 @@ import com.scott.model.QyInfo_Map_Level;
 public class FiDAO extends NDAO {
 
 
-	public int getPageCount(String tName) {
-		List<Object> params = new ArrayList<>();
-		return this.findCountBySQLQuery("select count(*) from " + tName, params.toArray());
+	/**
+	 * 
+	 * 删除QYINFO_MAP_LEVEL表所有数据
+	 * 为了重新构造各个层级数据做准备
+	 * 
+	 *
+	 * @变更记录 2018年1月10日 上午9:53:03 李瑞辉 创建
+	 *
+	 */
+	public void deleteMapLevel() {
+		Session session = null;
+		Transaction ts = null;
+		try {
+		   session = this.getSessionFactory().openSession();
+		   ts = session.beginTransaction();
+		   session.createSQLQuery("delete from QYINFO_MAP_LEVEL").executeUpdate();
+		   ts.commit();
+		} catch (Exception ignore) {
+		} finally {
+		   session.close();
+		}		
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<QyInfo_Map> findListCell(Double LNG_F, Double LNG_B, Double LAT_F, Double LAT_B) {
+		
+		Session session = null;
+		List<QyInfo_Map> list = null;
+		try {
+			session = this.getSessionFactory().openSession();
+			list = session.createSQLQuery("select * from QyInfo_Map map where " + LNG_F + " <= to_number(map.m_lng) and to_number(map.m_lng) < "+LNG_B+" and "+LAT_F+" <= to_number(map.m_lat) and to_number(map.m_lat) < "+LAT_B).addEntity(QyInfo_Map.class).list();
+		} catch (Throwable e) {
+		} finally {
+			session.close();
+		}
+		return list;
 	}
 	
 
+	@SuppressWarnings("unchecked")
+	public List<QyInfo_Map_Level> findListCell(Double LNG_F, Double LNG_B, Double LAT_F, Double LAT_B, String value) {
+		Session session = null;
+		List<QyInfo_Map_Level> list = null;
+		try {
+			session = this.getSessionFactory().openSession();
+			list = session.createSQLQuery("select * from QyInfo_Map_Level map where " + LNG_F + " <= to_number(map.m_lng) and to_number(map.m_lng) < "+LNG_B+" and "+LAT_F+" <= to_number(map.m_lat) and to_number(map.m_lat) < "+LAT_B + " and map.m_zoom_level_" + value + "='1' ").addEntity(QyInfo_Map_Level.class).list();
+		} catch (Throwable e) {
+		} finally {
+			session.close();
+		}
+		return list;
+	}
+	
+	
+	/**
+	 * 
+	 * 分页查询源企业表数据
+	 * 
+	 * @param i 页数
+	 * @param tName 表名
+	 * @param tColumns 字段名
+	 * @return
+	 *
+	 * @变更记录 2018年1月8日 下午11:48:32 李瑞辉 创建
+	 *
+	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public List<Object[]> findQyInfoByPage(int i, String tName, String tColumns) {
 
@@ -44,6 +104,22 @@ public class FiDAO extends NDAO {
 	
 	
 	/**
+	 * 
+	 * 分页查询信用地图专用企业信息表数据
+	 * 
+	 * @param i
+	 * @return
+	 *
+	 * @变更记录 2018年1月9日 上午12:26:30 李瑞辉 创建
+	 *
+	 */
+	@SuppressWarnings("unchecked")
+	public List<QyInfo_Map> findQyInfoMapByPage(int i) {
+		
+		return this.findPageByHql("from QyInfo_Map", new Object[] {}, i * 10, 10);
+	}
+	
+	/**
 	 * 将形如column1,column2,column3转成t.column1,t.column2,t.column3 
 	 *
 	 */
@@ -60,74 +136,10 @@ public class FiDAO extends NDAO {
 	}
 	
 	
-	/**
-	 * 保存到地图专用的企业信息表中
-	 *
-	 *
-	 * @变更记录 2017年10月31日 下午8:36:05 李瑞辉 创建
+	/*
+	 * 禁止插入的字段值是null 
 	 *
 	 */
-	public void saveQyInfoMap(List<Object[]> list, String table, String columns) {
-		Session session = null;
-		Transaction ts;
-		try {
-			session = this.getSessionFactory().openSession();
-			ts = session.beginTransaction();
-			
-			/**
-			 * 此次数据中是否存在相同的统一社会信用代码
-			 * 相同则只保留一个即可 
-			 */
-			Set<String> set = new HashSet<String>();
-			Iterator<Object[]> it = list.iterator();
-			while (it.hasNext()) {
-				Object[] o = it.next();
-				if (o == null) 
-					it.remove();
-				if (o[0] == null || o[0].equals("")) 
-					it.remove(); // 主键
-				if (o[2] == null || o[0].equals("")) 
-					it.remove(); // 统一社会信用代码
-				if (!set.add(o[2].toString())) { // 如果存入Set集合失败说明重复
-					it.remove();
-				}
-			}
-			
-			/**
-			 *  此种写法<tt>insert all</tt>在<tt>Oracle</tt>中可以批量插入数据
-			 *
-			 */
-			StringBuffer sql = new StringBuffer("insert all ");
-
-			for (Object[] data : list) {				
-				/**
-				 * 判断数据库中是否存在相同的统一社会信用代码的数据
-				 */
-				String C_SOCIAL_CREDIT_CODE = data[2].toString();
-				int exist = this.findCountBySQLQuery("select count(*) from "+ table +" t where t.C_SOCIAL_CREDIT_CODE=?", new Object[] {C_SOCIAL_CREDIT_CODE});
-				if (exist > 0) {
-					continue;
-				}
-				
-				data = geneValues(data);
-				sql.append(" into " + table + "(" + columns + ") values('" + data[0] + "','" + data[1] + "','" + data[2] + "', to_date('" + data[3] + "','yyyy-MM-dd'),'" + data[4] + "','" + data[5] + "'," + data[6] + ")");				
-			}
-			sql.append(" select 1 from dual");
-
-			session.createSQLQuery(sql.toString()).executeUpdate();
-			ts.commit();
-		} catch (Exception e) {
-			/**
-			 * A表数据拷贝到B表中
-			 * 即便复制过程出现异常也不需要回滚
-			 */
-			//ts.rollback();
-		} finally {
-			session.close();
-		}
-	}
-	
-	
 	private Object[] geneValues(Object[] columns) {
 		if (columns[1] == null) columns[1] = "";
 		if (columns[2] == null) columns[2] = "";
@@ -138,87 +150,91 @@ public class FiDAO extends NDAO {
 		return columns;
 	}
 	
-	
-	
+	/** 最大纬度 */
 	@SuppressWarnings("unchecked")
-	public List<QyInfo_Map> findQyInfoMapByPage(int i) {
-		return this.findPageByHql("from QyInfo_Map where m_lng is null", new Object[] {}, i * 10, 10);
+	public Double getMaxLat(String value) {
+		List<String> list;
+		if (value.equals("s")) {
+			Session session = null;
+			session = this.getSessionFactory().openSession();
+			list = session.createSQLQuery("select to_char(max(to_number(m_lat))) from QyInfo_Map").list();		
+		}
+		else 
+			list = (List<String>) this.findByHql("select to_char(max(to_number(m_lat))) from QyInfo_Map_Level where m_zoom_level_" + value + "='1'");
+		return Double.valueOf(list.get(0));
 	}
 	
 	/** 最大经度 */
 	@SuppressWarnings("unchecked")
 	public Double getMaxLng(String value) {
 		List<String> list;
-		if (value.equals("s"))
-			list = (List<String>) this.findByHql("select to_char(max(to_number(m_lng))) from QyInfo_Map");
+		if (value.equals("s")) {
+			Session session = null;
+			session = this.getSessionFactory().openSession();
+			list = session.createSQLQuery("select to_char(max(to_number(m_lng))) from QyInfo_Map").list();		
+		}		
 		else 
 			list = (List<String>) this.findByHql("select to_char(max(to_number(m_lng))) from QyInfo_Map_Level where m_zoom_level_" + value + "='1'");
 		return Double.valueOf(list.get(0));
 		
+	}
+	
+	
+	/** 最小纬度 */
+	@SuppressWarnings("unchecked")
+	public Double getMinLat(String value) {
+		List<String> list;
+		if (value.equals("s")) {
+			Session session = null;
+			session = this.getSessionFactory().openSession();
+			list = session.createSQLQuery("select to_char(min(to_number(m_lat))) from QyInfo_Map").list();		
+		}
+		else 
+			list = (List<String>) this.findByHql("select to_char(min(to_number(m_lat))) from QyInfo_Map_Level where m_zoom_level_" + value + "='1'");
+		return Double.valueOf(list.get(0));
 	}
 
 	/** 最小经度 */
 	@SuppressWarnings("unchecked")
 	public Double getMinLng(String value) {
 		List<String> list;
-		if (value.equals("s"))
-			list = (List<String>) this.findByHql("select to_char(min(to_number(m_lng))) from QyInfo_Map");
+		if (value.equals("s")) {
+			Session session = null;
+			session = this.getSessionFactory().openSession();
+			list = session.createSQLQuery("select to_char(min(to_number(m_lng))) from QyInfo_Map").list();
+		}		
 		else 
 			list = (List<String>) this.findByHql("select to_char(min(to_number(m_lng))) from QyInfo_Map_Level where m_zoom_level_" + value + "='1'");
 		return Double.valueOf(list.get(0));
 	}
 
-	/** 最大纬度 */
-	@SuppressWarnings("unchecked")
-	public Double getMaxLat(String value) {
-		List<String> list;
-		if (value.equals("s"))
-			list = (List<String>) this.findByHql("select to_char(max(to_number(m_lat))) from QyInfo_Map");
-		else 
-			list = (List<String>) this.findByHql("select to_char(max(to_number(m_lat))) from QyInfo_Map_Level where m_zoom_level_" + value + "='1'");
-		return Double.valueOf(list.get(0));
+	/**
+	 * 
+	 * 查询源企业表总数量
+	 * 
+	 * @param tName 源企业表名
+	 * @return
+	 *
+	 * @变更记录 2018年1月8日 下午11:47:23 李瑞辉 创建
+	 *
+	 */
+	public int getPageCount(String tName) {
+		List<Object> params = new ArrayList<>();
+		return this.findCountBySQLQuery("select count(*) from " + tName, params.toArray());
 	}
 
-	/** 最小纬度 */
-	@SuppressWarnings("unchecked")
-	public Double getMinLat(String value) {
-		List<String> list;
-		if (value.equals("s"))
-			list = (List<String>) this.findByHql("select to_char(min(to_number(m_lat))) from QyInfo_Map");
-		else 
-			list = (List<String>) this.findByHql("select to_char(min(to_number(m_lat))) from QyInfo_Map_Level where m_zoom_level_" + value + "='1'");
-		return Double.valueOf(list.get(0));
-	}
-	
-	
-	@SuppressWarnings("unchecked")
-	public List<QyInfo_Map> findListCell(Double LNG_F, Double LNG_B, Double LAT_F, Double LAT_B) {
-		
-		Session session = null;
-		List<QyInfo_Map> list = null;
-		try {
-			session = this.getSessionFactory().openSession();
-			list = session.createSQLQuery("select * from QyInfo_Map map where " + LNG_F + " <= to_number(map.m_lng) and to_number(map.m_lng) < "+LNG_B+" and "+LAT_F+" <= to_number(map.m_lat) and to_number(map.m_lat) < "+LAT_B).addEntity(QyInfo_Map.class).list();
-//			list = session.createSQLQuery("select * from QyInfo_Map map where 114.960436 <= to_number(map.m_lng) and to_number(map.m_lng) < 114.960438 and 27.160925 <= to_number(map.m_lat) and to_number(map.m_lat) < 27.160926").addEntity(QyInfo_Map.class).list();
-		} catch (Throwable e) {
-		} finally {
-			session.close();
-		}
-		return list;
-	}
-	
-	@SuppressWarnings("unchecked")
-	public List<QyInfo_Map_Level> findListCell(Double LNG_F, Double LNG_B, Double LAT_F, Double LAT_B, String value) {
-		Session session = null;
-		List<QyInfo_Map_Level> list = null;
-		try {
-			session = this.getSessionFactory().openSession();
-			list = session.createSQLQuery("select * from QyInfo_Map_Level map where " + LNG_F + " <= to_number(map.m_lng) and to_number(map.m_lng) < "+LNG_B+" and "+LAT_F+" <= to_number(map.m_lat) and to_number(map.m_lat) < "+LAT_B + " and map.m_zoom_level_" + value + "='1' ").addEntity(QyInfo_Map_Level.class).list();
-		} catch (Throwable e) {
-		} finally {
-			session.close();
-		}
-		return list;
+	/**
+	 * 
+	 * 查询信用地图专用表总数量
+	 * 
+	 * @return
+	 *
+	 * @变更记录 2018年1月9日 上午12:02:20 李瑞辉 创建
+	 *
+	 */
+	public int getPageCountOfMap() {
+		List<Object> params = new ArrayList<>();
+		return this.findCountBySQLQuery("select count(*) from qyinfo_map", params.toArray());
 	}
 	
 	
@@ -247,6 +263,85 @@ public class FiDAO extends NDAO {
 		} finally {
 			session.close();
 		}
+	}
+	
+	/**
+	 * 
+	 * 保存到地图专用的企业信息表中
+	 * 
+	 * @param list 源数据
+	 * @param table 目标表
+	 * @param columns 目标字段
+	 *
+	 * @变更记录 2018年1月8日 下午11:49:26 LRH 创建
+	 *
+	 */
+	public void saveQyInfoMap(List<Object[]> list, String table, String columns) {
+		Session session = null;
+		Transaction ts;
+		try {
+			session = this.getSessionFactory().openSession();
+			ts = session.beginTransaction();
+			
+			/**
+			 * 此次数据中是否存在相同的统一社会信用代码
+			 * 相同则只保留一个即可 
+			 */
+			Set<String> set = new HashSet<String>();
+			Iterator<Object[]> it = list.iterator();
+			while (it.hasNext()) {
+				Object[] o = it.next();
+				if (o == null)  it.remove();
+				if (o[0] == null || o[0].equals(""))  it.remove(); // 主键
+				if (o[2] == null || o[0].equals(""))  it.remove(); // 统一社会信用代码
+				if (!set.add(o[2].toString())) it.remove();  // 如果存入Set集合失败说明重复
+			}
+			
+			/**
+			 *  此种写法<tt>insert all</tt>在<tt>Oracle</tt>中可以批量插入数据
+			 *
+			 */
+			StringBuffer sql = new StringBuffer("insert all ");
+
+			for (Object[] data : list) {				
+				/**
+				 * 判断数据库中是否存在相同的统一社会信用代码的数据
+				 */
+				String C_SOCIAL_CREDIT_CODE = data[2].toString();
+				int exist = this.findCountBySQLQuery("select count(*) from "+ table +" t where t.C_SOCIAL_CREDIT_CODE=?", new Object[] {C_SOCIAL_CREDIT_CODE});
+				if (exist > 0) {
+					continue;
+				}
+				
+				data = geneValues(data);
+				sql.append(" into " + table + "(" + columns + ") values('" + data[0] + "','" + data[1] + "','" + data[2] + "', to_date('" + data[3] + "','yyyy-MM-dd'),'" + data[4] + "','" + data[5] + "'," + data[6] + ")");				
+			}
+			sql.append(" select 1 from dual");
+
+			session.createSQLQuery(sql.toString()).executeUpdate();
+			ts.commit();
+		} catch (Exception e) {
+			/**
+			 * 源表数据拷贝到目标表中
+			 * 即便复制过程出现异常也不需要回滚
+			 */
+			//ts.rollback();
+		} finally {
+			session.close();
+		}
+	}
+	
+	
+	public void updateMap(QyInfo_Map info) {
+		Session session = null;
+		try {
+			session = this.getSessionFactory().openSession();
+			session.createSQLQuery("update qyinfo_map set m_lng = '" + info.getM_lng() + "', m_lat='" + info.getM_lat() + "' where id = '" + info.getId() + "'").executeUpdate();
+		} catch (Throwable e) {
+		} finally {
+			session.close();
+		}
+		
 	}
 	
 	

@@ -1,35 +1,38 @@
 package com.scott.model;
 
+import java.io.Serializable;
+import java.util.Date;
+
 /**
+ * 信用地图专用企业信息表
+ * 
  * 信用地图最后一层级数据
  *
  * @since  2017年11月1日
  * @author 李瑞辉
  *
  */
-public class QyInfo_Map {
+public class QyInfo_Map implements Serializable {
 
-	// 主键
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7355962086257463088L;
+	
 	private String id;
-	// 企业名称
-	private String qymc;
-	// 经度
-	private String m_lng;
-	// 纬度
-	private String m_lat;
-	// 失信守信值
-	private String m_count;
-
+	/*
+	 * 企业名称
+	 */
+	private String c_name;
+	private String c_social_credit_code;
+	private Date estart_time;
+	private String legal_representative;
+	private String res_address;
+	private Number reg_capital;
+  	private String m_lng;
+  	private String m_lat;	
+	
 	public QyInfo_Map() {
-	}
-
-	public QyInfo_Map(String id, String qymc, String m_lng, String m_lat, String m_count) {
-		super();
-		this.id = id;
-		this.qymc = qymc;
-		this.m_lng = m_lng;
-		this.m_lat = m_lat;
-		this.m_count = m_count;
 	}
 
 	public String getId() {
@@ -40,12 +43,52 @@ public class QyInfo_Map {
 		this.id = id;
 	}
 
-	public String getQymc() {
-		return qymc;
+	public String getC_name() {
+		return c_name;
 	}
 
-	public void setQymc(String qymc) {
-		this.qymc = qymc;
+	public void setC_name(String c_name) {
+		this.c_name = c_name;
+	}
+
+	public String getC_social_credit_code() {
+		return c_social_credit_code;
+	}
+
+	public void setC_social_credit_code(String c_social_credit_code) {
+		this.c_social_credit_code = c_social_credit_code;
+	}
+
+	public Date getEstart_time() {
+		return estart_time;
+	}
+
+	public void setEstart_time(Date estart_time) {
+		this.estart_time = estart_time;
+	}
+
+	public String getLegal_representative() {
+		return legal_representative;
+	}
+
+	public void setLegal_representative(String legal_representative) {
+		this.legal_representative = legal_representative;
+	}
+
+	public String getRes_address() {
+		return res_address;
+	}
+
+	public void setRes_address(String res_address) {
+		this.res_address = res_address;
+	}
+
+	public Number getReg_capital() {
+		return reg_capital;
+	}
+
+	public void setReg_capital(Number reg_capital) {
+		this.reg_capital = reg_capital;
 	}
 
 	public String getM_lng() {
@@ -64,12 +107,9 @@ public class QyInfo_Map {
 		this.m_lat = m_lat;
 	}
 
-	public String getM_count() {
-		return m_count;
-	}
+	
 
-	public void setM_count(String m_count) {
-		this.m_count = m_count;
-	}
-
+	
+	
+	
 }
