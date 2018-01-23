@@ -320,7 +320,7 @@ public class FiDAO extends NDAO {
 
 			session.createSQLQuery(sql.toString()).executeUpdate();
 			ts.commit();
-		} catch (Exception e) {
+		} catch (Exception ignore) {
 			/**
 			 * 源表数据拷贝到目标表中
 			 * 即便复制过程出现异常也不需要回滚

@@ -54,7 +54,7 @@ public class Main {
 		
 		stepA(service, map, prop);
 		stepB(service, prop);		
-		stepC(service);
+//		stepC(service);
 		
 	}
 	

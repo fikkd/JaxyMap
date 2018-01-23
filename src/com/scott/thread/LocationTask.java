@@ -1,6 +1,5 @@
 package com.scott.thread;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
@@ -51,16 +50,16 @@ public class LocationTask implements Runnable {
 		GetMethod method = null;
 		try {
 			url = url + java.net.URLEncoder.encode(info.getC_name(), "UTF-8")
-					+ "&output=json&key=zkcsXqlktTGQLBcgqGXLBKZu&city="
+					+ "&output=json&ak=5Wlafr2Q2Y43Wq26HTv63oXeHyf5WA32&city="
 					+ java.net.URLEncoder.encode(param.getCityName(), "UTF-8");
-
+			
 			method = new GetMethod(url);
 
 			client.executeMethod(method);
 			if (method.getStatusCode() == 200) {
 				String reString = method.getResponseBodyAsString();
 				reString = reString.replaceAll("(?s).*\"lng\":(\\d*\\.\\d*).*\"lat\":(\\d*\\.\\d*).*", "$1,$2");
-				if (reString.matches(".*\\d.*")) { // 如果替换成功
+				if (reString.matches("\\d+\\.\\d+,\\d+\\.\\d+")) { // 如果替换成功
 					String[] arr = reString.split(",");
 					info.setM_lng(arr[0]);
 					info.setM_lat(arr[1]);
