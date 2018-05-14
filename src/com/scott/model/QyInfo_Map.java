@@ -14,23 +14,18 @@ import java.util.Date;
  */
 public class QyInfo_Map implements Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -7355962086257463088L;
 	
-	private String id;
-	/*
-	 * 企业名称
-	 */
-	private String c_name;
+	private String id;	
+	private String c_name; // 企业名称
 	private String c_social_credit_code;
 	private Date estart_time;
 	private String legal_representative;
 	private String res_address;
 	private Number reg_capital;
   	private String m_lng;
-  	private String m_lat;	
+  	private String m_lat;
+  	private String m_on;       // 在更新经纬度时,作为判断是否被处理过
 	
 	public QyInfo_Map() {
 	}
@@ -105,6 +100,14 @@ public class QyInfo_Map implements Serializable {
 
 	public void setM_lat(String m_lat) {
 		this.m_lat = m_lat;
+	}
+
+	public String getM_on() {
+		return m_on;
+	}
+
+	public void setM_on(String m_on) {
+		this.m_on = m_on;
 	}
 
 	

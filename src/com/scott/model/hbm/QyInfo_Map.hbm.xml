@@ -35,5 +35,8 @@
 		<property name="m_lat" lazy="false">
 			<column name="m_lat" length="15" />
 		</property>
+		<property name="m_on" lazy="false">
+			<column name="m_on" length="1" />
+		</property>
 	</class>
 </hibernate-mapping>

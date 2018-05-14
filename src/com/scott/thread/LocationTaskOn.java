@@ -2,8 +2,6 @@ package com.scott.thread;
 
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Semaphore;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -12,25 +10,15 @@ import com.scott.common.KParam;
 import com.scott.dao.FiDAO;
 import com.scott.model.QyInfo_Map;
 
-/**
- * 查询百度API 给Qyinfo_Map表中的企业名称设置对应的经纬度, 从而方便在地图上展示
- *
- * @since 2017年11月2日
- * @author 李瑞辉
- *
- */
-public class LocationTask implements Runnable {
 
-	private CountDownLatch latch;
-	private Semaphore semaphore;
+public class LocationTaskOn implements Runnable {
+
 	private Properties prop;
 	private List<QyInfo_Map> list;
 	private KParam param;
 	private FiDAO fiDAO;
-
-	public LocationTask(CountDownLatch latch, Semaphore semaphore, Properties prop, List<QyInfo_Map> list, FiDAO fiDAO, KParam param) {
-		this.latch = latch;
-		this.semaphore = semaphore;
+	
+	public LocationTaskOn(Properties prop, List<QyInfo_Map> list, FiDAO fiDAO, KParam param) {
 		this.prop = prop;
 		this.list = list;
 		this.fiDAO = fiDAO;
@@ -44,16 +32,12 @@ public class LocationTask implements Runnable {
 		for (QyInfo_Map info : list) {
 			setLocation(client, info, url);
 		}
-
-		latch.countDown();
 	}
 
-	// http://api.map.baidu.com/lbsapi/geocoding-api.htm
 	public void setLocation(HttpClient client, QyInfo_Map info, String url) {		 
 		
 		GetMethod method = null;
 		try {
-			semaphore.acquire();
 			
 			url = url + java.net.URLEncoder.encode(info.getC_name(), "UTF-8")
 					+ "&output=json&ak=0F6lvW7RH7VsRymFTCT7hYYOYVn5ezWk&city="
@@ -69,6 +53,7 @@ public class LocationTask implements Runnable {
 					String[] arr = reString.split(",");
 					info.setM_lng(arr[0]);
 					info.setM_lat(arr[1]);
+					info.setM_on("1");  // 表示被处理
 					fiDAO.updateMap(info);
 				}
 			}
@@ -76,7 +61,6 @@ public class LocationTask implements Runnable {
 			ignore.printStackTrace();
 		} finally {
 			method.releaseConnection();
-			semaphore.release();
 		}
 
 	}

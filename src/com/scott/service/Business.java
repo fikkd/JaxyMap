@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -16,6 +17,7 @@ import com.scott.dao.FiDAO;
 import com.scott.model.QyInfo_Map;
 import com.scott.model.QyInfo_Map_Level;
 import com.scott.thread.LocationTask;
+import com.scott.thread.LocationTaskOn;
 import com.scott.thread.MoveDataTask;
 
 
@@ -135,6 +137,7 @@ public class Business implements IBusiness {
 		
 		return fiDAO.getPageCountOfMap();		
 	}
+	
 	
 	public ThreadPoolTaskExecutor getTaskExecutor() {
 		return taskExecutor;
@@ -279,7 +282,7 @@ public class Business implements IBusiness {
 	 *
 	 */
 	@Override
-	public void updateLocation(CountDownLatch latch, Properties prop, int page) {
+	public void updateLocation(CountDownLatch latch, Semaphore semaphore, Properties prop, int page) {
 		
 		ApplicationContext context = CommonUtil.getSpringApplicationContext();
 		KParam param = (KParam) context.getBean("kParam");
@@ -289,10 +292,29 @@ public class Business implements IBusiness {
 		for (int i = 0; i < page; i++) {
 			list = fiDAO.findQyInfoMapByPage(i);
 			if (list != null) {
-				task = new LocationTask(latch, prop, list, fiDAO, param);
+				task = new LocationTask(latch, semaphore, prop, list, fiDAO, param);
 				taskExecutor.execute(task);
 			}
 		}
+	}
+	
+	/**
+	 * ÃÖ²¹'ÒÅÊ§'µÄ¾­Î³¶È
+	 * 
+	 */
+	public void updateLocation(Properties prop) {
+		ApplicationContext context = CommonUtil.getSpringApplicationContext();
+		KParam param = (KParam) context.getBean("kParam");
+		
+		List<QyInfo_Map> list = fiDAO.getListOfMapOn();
+		Runnable task;
+		for (;;) {
+			task = new LocationTaskOn(prop, list, fiDAO, param);			
+			task.run();			
+			if (list != null && list.size() < 10)
+				break;
+			list = fiDAO.getListOfMapOn();			
+		}		
 	}
 	
 	

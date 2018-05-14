@@ -6,7 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -14,13 +17,16 @@ import com.scott.common.CommonUtil;
 import com.scott.service.IBusiness;
 
 public class Main {
-
+	
+	private static final Logger logger = LogManager.getLogger(Main.class.getName());
+	
 	public static void main(String[] args) {
 		ApplicationContext context = CommonUtil.getSpringApplicationContext();
 		IBusiness service = (IBusiness) context.getBean("business");
 
-		run(service);
+		CommonUtil.configureLog4j();
 		
+		run(service);
 		
 	}
 	
@@ -55,7 +61,7 @@ public class Main {
 		
 		stepA(service, map, prop);
 		stepB(service, prop);		
-		stepC(service);
+//		stepC(service);
 		
 		ApplicationContext context = CommonUtil.getSpringApplicationContext();
 		ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) context.getBean("taskExecutor");
@@ -69,18 +75,20 @@ public class Main {
 	 *
 	 */
 	private static void stepA(IBusiness service, Map<String, String> map, Properties prop) {
-		
-		
-		System.out.println("7秒以后进行删除数据");
+
+		logger.info("7秒以后进行删除数据");
 		
 		try {
 			Thread.sleep(1000 * 7);
 		} catch (InterruptedException ignore) {
 		}
 		service.deleteMap();
-		System.out.println("数据删除完成... 7秒以后重新构造数据");
-		
-		System.out.println("第一步开始");
+		logger.info("数据删除完成... 7秒以后重新构造数据");
+		try {
+			Thread.sleep(1000 * 7);
+		} catch (InterruptedException ignore) {
+		}
+		logger.info("第一步开始");
 		CountDownLatch latch = new CountDownLatch(4);
 		try {			
 			service.moveData(latch, map, prop);
@@ -88,7 +96,7 @@ public class Main {
 		} catch (InterruptedException ignore) {
 			
 		}
-		System.out.println("第一步完成");
+		logger.info("第一步完成");
 	}
 	
 	/**
@@ -97,20 +105,34 @@ public class Main {
      * 给qyinfo_map表中的企业设置对应的经纬度, 从而方便在地图上展示
 	 */
 	private static void stepB(IBusiness service, Properties prop) {
-		System.out.println("第二步开始");		
+		logger.info("第二步开始");
 		
 		int count = service.getPageCountOfMap();
 		int page = (count % 10 == 0) ? count / 10 : count / 10 + 1;
 		
-		CountDownLatch latc = new CountDownLatch(page);
+		CountDownLatch latc = new CountDownLatch(page);		
+		Semaphore semaphore = new Semaphore(10);
+		
+		/*
+		 * 步骤2.1
+		 */
 		try {			
-			service.updateLocation(latc, prop, page);
+			service.updateLocation(latc, semaphore, prop, page);
 			latc.await();
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
-		System.out.println("第二步完成");	
+				
+		/* 
+		 * 步骤2.2
+		 * 由于百度地图API的并发限制, 第2.1中有一部分企业的经纬度并没有更新成功, 因此需要弥补
+		 * 经过2.1并发调用已经解决了绝大多数的经纬度
+		 * 此步2.2逐条调用百度地图API
+		 * 
+		 */
+		service.updateLocation(prop);
 		
+		logger.info("第二步完成");
 	}
 	
 	/**
@@ -122,7 +144,7 @@ public class Main {
 	 * 
 	 * 规则: 根据最简单的聚合算法和自己设定的一部分规则值 */
 	private static void stepC(IBusiness service) {
-		System.out.println("第三步开始");
+		logger.info("第三步开始");
 		
 		Map<String, Integer> map = new HashMap<>();		
 		/**
@@ -163,7 +185,7 @@ public class Main {
 			generateLevelData(map, levels, zoom, service);
 		}
 		
-		System.out.println("第三步完成");
+		logger.info("第三步完成");
 	}
 	
 	private static void generateLevelData(Map<String, Integer> map, String levels, String zoom, IBusiness service) {

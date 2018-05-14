@@ -1,11 +1,5 @@
 package com.scott.dao;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -137,7 +131,7 @@ public class FiDAO extends NDAO {
 	@SuppressWarnings("unchecked")
 	public List<QyInfo_Map> findQyInfoMapByPage(int i) {
 		
-		return this.findPageByHql("from QyInfo_Map", new Object[] {}, i * 10, 10);
+		return this.findPageByHql("from QyInfo_Map ", new Object[] {}, i * 10, 10);
 	}
 	
 	/**
@@ -255,9 +249,17 @@ public class FiDAO extends NDAO {
 	 */
 	public int getPageCountOfMap() {
 		List<Object> params = new ArrayList<>();
-		return this.findCountBySQLQuery("select count(*) from qyinfo_map", params.toArray());
+		return this.findCountBySQLQuery("select count(*) from qyinfo_map ", params.toArray());
 	}
 	
+	/**
+	 * 查询10条信用地图专用表的数据( 排除经纬度为空的数据 )
+	 * 
+	 */
+	@SuppressWarnings("unchecked")
+	public List<QyInfo_Map> getListOfMapOn() {
+		return this.findPageByHql("from QyInfo_Map m where m.m_lng is null or m.m_lat is null and m.m_on != '1'", new Object[] {}, 0, 10);
+	}
 	
 	/**
 	 * 新增信用地图层级数据

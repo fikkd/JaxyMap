@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration>
+
+	<appender name="ConsoleAppender" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="[%-5p] %d - %c -%-4r [%t] %c %x - %m%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="levelMin" value="INFO" />
+			<param name="levelMax" value="ERROR" />
+			<param name="AcceptOnMatch" value="true" />
+		</filter>
+	</appender>
+
+	<appender name="InfoRollingFileAppender" class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="log/map.log" />
+		<param name="Append" value="true" />
+		<param name="MaxBackupIndex" value="10" />
+		<param name="MaxFileSize" value="10KB" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="[%d{yyyy-MM-dd HH:mm:ss:SSS}] [%-5p] [method:%l]%n%m%n%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="levelMin" value="INFO" />
+			<param name="levelMax" value="WARN" />
+			<param name="AcceptOnMatch" value="true" />
+		</filter>
+	</appender>
+	
+	<appender name="ErrorRollingFileAppender" class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="log/map-error.log" />
+		<param name="Append" value="true" />
+		<param name="MaxBackupIndex" value="10" />
+		<param name="MaxFileSize" value="10KB" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="[%d{yyyy-MM-dd HH:mm:ss:SSS}] [%-5p] [method:%l] %d - %c -%-4r [%t] %c %x - %n%m%n%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="levelMin" value="ERROR" />
+			<param name="levelMax" value="ERROR" />
+			<param name="AcceptOnMatch" value="true" />
+		</filter>
+	</appender>
+	
+
+	<root>
+		<level value="INFO" />
+		<appender-ref ref="ConsoleAppender" />
+		<appender-ref ref="InfoRollingFileAppender"/>
+		<appender-ref ref="ErrorRollingFileAppender"/>
+	</root>
+
+</log4j:configuration>
