@@ -24,6 +24,12 @@ public class Business implements IBusiness {
 
 	private FiDAO fiDAO;
 	private ThreadPoolTaskExecutor taskExecutor;
+	
+	@Override
+	public void deleteMap() {
+		
+		fiDAO.deleteMap();
+	}
 
 	/**
 	 * 
@@ -273,7 +279,7 @@ public class Business implements IBusiness {
 	 *
 	 */
 	@Override
-	public void setLocation(CountDownLatch latch, Properties prop, int page) {
+	public void updateLocation(CountDownLatch latch, Properties prop, int page) {
 		
 		ApplicationContext context = CommonUtil.getSpringApplicationContext();
 		KParam param = (KParam) context.getBean("kParam");

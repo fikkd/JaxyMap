@@ -1,5 +1,11 @@
 package com.scott.dao;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -20,6 +26,21 @@ import com.scott.model.QyInfo_Map_Level;
 public class FiDAO extends NDAO {
 
 
+	public void deleteMap() {
+		Session session = null;
+		Transaction ts = null;
+		try {
+		   session = this.getSessionFactory().openSession();
+		   ts = session.beginTransaction();
+		   session.createSQLQuery("delete from QYINFO_MAP").executeUpdate();
+		   session.createSQLQuery("delete from QYINFO_MAP_LEVEL").executeUpdate();
+		   ts.commit();
+		} catch (Exception ignore) {
+		} finally {
+		   session.close();
+		}		
+	}
+	
 	/**
 	 * 
 	 * 删除QYINFO_MAP_LEVEL表所有数据
@@ -332,15 +353,35 @@ public class FiDAO extends NDAO {
 	}
 	
 	
-	public void updateMap(QyInfo_Map info) {
+	/**
+	 * 
+	 * 更新Qyinfo_Map表中的经纬度
+	 */
+	public void updateMap(final QyInfo_Map info) {
+
+		this.update(info);
+		
+/*		
 		Session session = null;
+		Transaction ts = null;
 		try {
 			session = this.getSessionFactory().openSession();
+			ts = session.beginTransaction();
 			session.createSQLQuery("update qyinfo_map set m_lng = '" + info.getM_lng() + "', m_lat='" + info.getM_lat() + "' where id = '" + info.getId() + "'").executeUpdate();
-		} catch (Throwable e) {
+			ts.commit();
+		} catch (Throwable e) {			
+			e.printStackTrace();
+			PrintStream out;
+			try {
+				long f = System.currentTimeMillis();
+				out = new PrintStream(new FileOutputStream(new File("E:\\" + f)), true, "UTF-8");
+				e.printStackTrace(out);
+			} catch (Exception ignore) {
+			}
 		} finally {
 			session.close();
-		}
+		}*/
+
 		
 	}
 	

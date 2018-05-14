@@ -12,9 +12,11 @@ public interface IBusiness {
 	
 	int getPageCountOfMap();
 	
+	void deleteMap();
+	
 	void deleteMapLevel();
 	
-	void setLocation(CountDownLatch latch, Properties prop, int page);
+	void updateLocation(CountDownLatch latch, Properties prop, int page);
 	
 	void generateLevelData(String pre, String next, int cell);
 	

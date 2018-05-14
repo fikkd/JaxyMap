@@ -1,5 +1,8 @@
 package com.scott.thread;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
@@ -46,11 +49,11 @@ public class LocationTask implements Runnable {
 	}
 
 	// http://api.map.baidu.com/lbsapi/geocoding-api.htm
-	public void setLocation(HttpClient client, QyInfo_Map info, String url) {
+	public void setLocation(HttpClient client, QyInfo_Map info, String url) {		 
 		GetMethod method = null;
 		try {
 			url = url + java.net.URLEncoder.encode(info.getC_name(), "UTF-8")
-					+ "&output=json&ak=5Wlafr2Q2Y43Wq26HTv63oXeHyf5WA32&city="
+					+ "&output=json&ak=0F6lvW7RH7VsRymFTCT7hYYOYVn5ezWk&city="
 					+ java.net.URLEncoder.encode(param.getCityName(), "UTF-8");
 			
 			method = new GetMethod(url);
@@ -66,10 +69,10 @@ public class LocationTask implements Runnable {
 					fiDAO.updateMap(info);
 				}
 			}
-		} catch (Exception ignore) {
-
+		} catch (Throwable ignore) {
+			ignore.printStackTrace();
 		} finally {
-			method.releaseConnection();
+			method.releaseConnection();			
 		}
 
 	}

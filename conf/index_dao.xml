@@ -19,9 +19,13 @@
 		<!-- <property name="driverUrl" value="jdbc:oracle:thin:@//${db.dUrl}" /> -->
 		<property name="user" value="${db.user}" />
 		<property name="password" value="${db.password}" />
-		<property name="minimumConnectionCount" value="3" />
-		<property name="maximumConnectionCount" value="10" />
-		<property name="delegateProperties" value="autoCommit=true, foo=5" />
+		<property name="houseKeepingSleepTime" value="90000" />
+	    <property name="prototypeCount" value="0" />
+	    <property name="maximumConnectionCount" value="500" />
+	    <property name="minimumConnectionCount" value="2" />
+	    <property name="simultaneousBuildThrottle" value="50" />
+	    <property name="maximumConnectionLifetime" value="14400000" />
+	    <property name="houseKeepingTestSql" value="select CURRENT_DATE" />
 	</bean>  
 	
 	<bean id="index_SessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
@@ -33,6 +37,7 @@
 				<prop key="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect</prop>
 				<prop key="hibernate.connection.SetBigStringTryClob">true</prop>
 				<prop key="hibernate.show_sql">true</prop>
+<!-- 				<prop key="hibernate.connection.release_mode">after_transaction</prop> -->
 			</props>
 		</property>
 		

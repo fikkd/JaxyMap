@@ -8,6 +8,7 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.scott.common.CommonUtil;
 import com.scott.service.IBusiness;
@@ -54,7 +55,11 @@ public class Main {
 		
 		stepA(service, map, prop);
 		stepB(service, prop);		
-//		stepC(service);
+		stepC(service);
+		
+		ApplicationContext context = CommonUtil.getSpringApplicationContext();
+		ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) context.getBean("taskExecutor");
+		taskExecutor.shutdown();
 		
 	}
 	
@@ -64,6 +69,17 @@ public class Main {
 	 *
 	 */
 	private static void stepA(IBusiness service, Map<String, String> map, Properties prop) {
+		
+		
+		System.out.println("7秒以后进行删除数据");
+		
+		try {
+			Thread.sleep(1000 * 7);
+		} catch (InterruptedException ignore) {
+		}
+		service.deleteMap();
+		System.out.println("数据删除完成... 7秒以后重新构造数据");
+		
 		System.out.println("第一步开始");
 		CountDownLatch latch = new CountDownLatch(4);
 		try {			
@@ -88,12 +104,13 @@ public class Main {
 		
 		CountDownLatch latc = new CountDownLatch(page);
 		try {			
-			service.setLocation(latc, prop, page);
+			service.updateLocation(latc, prop, page);
 			latc.await();
 		} catch (InterruptedException e) {
-			
+			e.printStackTrace();
 		}
-		System.out.println("第二步完成");
+		System.out.println("第二步完成");	
+		
 	}
 	
 	/**
