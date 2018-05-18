@@ -40,12 +40,19 @@ public class Main {
 		/**
 		 * 读取配置信息
 		 */
-		InputStream input;
+		InputStream input = null;
 		Properties prop = new Properties();
 		try {
 			input = new FileInputStream("conf/init.properties");
 			prop.load(input);
 		} catch (Exception ignore) {
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException ignore) {
+				}				
+			}
 		}
 		
 		String tName1 = prop.get("tName1").toString();
@@ -64,9 +71,9 @@ public class Main {
 		map.put(tName4, tColumns4);
 		
 		
-		stepA(service, map, prop);
-		stepB(service, prop);		
-		stepC(service);
+//		stepA(service, map, prop);
+//		stepB(service, prop);		
+//		stepC(service);
 		
 		ApplicationContext context = CommonUtil.getSpringApplicationContext();
 		ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) context.getBean("taskExecutor");
@@ -76,7 +83,7 @@ public class Main {
 		int all = service.getPageCountOfMap();	// 总量
 		int others = service.getLngisnull();			// 经纬度为空的数据量
 		
-		File file = new File("D:\\map_.txt");
+		File file = new File("log/out.txt");
 		BufferedWriter out = null;
 		try {
 			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
