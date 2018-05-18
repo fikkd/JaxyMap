@@ -10,27 +10,51 @@
 		</property>
 	</bean>
 
-	<bean id="proxoolDataSource" class="org.logicalcobwebs.proxool.ProxoolDataSource">
-		<property name="alias" value="alias" />
-		<property name="driver" value="oracle.jdbc.driver.OracleDriver" />
-		<!-- SID方式 -->
-		<property name="driverUrl" value="jdbc:oracle:thin:@${db.dUrl}" />
-		<!-- ServiceName方式 -->
+	<bean id="dataSource" class="org.logicalcobwebs.proxool.ProxoolDataSource">
+		<property name="alias" value="map" />
+		<property name="driver" value="oracle.jdbc.driver.OracleDriver" />		
+		<property name="driverUrl" value="jdbc:oracle:thin:@${db.dUrl}" />		
 		<!-- <property name="driverUrl" value="jdbc:oracle:thin:@//${db.dUrl}" /> -->
 		<property name="user" value="${db.user}" />
 		<property name="password" value="${db.password}" />
-		<property name="houseKeepingSleepTime" value="90000" />
-	    <property name="prototypeCount" value="0" />
-	    <property name="maximumConnectionCount" value="500" />
-	    <property name="minimumConnectionCount" value="2" />
-	    <property name="simultaneousBuildThrottle" value="50" />
-	    <property name="maximumConnectionLifetime" value="14400000" />
+		<property name="houseKeepingSleepTime" value="20000" />		<!-- 侦察各个连接状态的时间间隔(毫秒)
+																															空闲连接回收
+																															超时连接销毁 -->
+	    <property name="prototypeCount" value="5" />							<!-- 最少保持空闲连接数 -->
+	    <property name="maximumConnectionCount" value="500" />	<!-- 最大连接数 -->
+	    <property name="minimumConnectionCount" value="5" />			<!-- 最小连接数 -->
+	    <property name="simultaneousBuildThrottle" value="50" />		<!-- 同时请求建立连接的最大数 -->
+	    <property name="maximumConnectionLifetime" value="14400000" />	<!-- 连接的最大存活时间(毫秒) -->
+	    <property name="maximumActiveTime" value="900000" />			<!-- 线程的最大活动时间 -->
 	    <property name="houseKeepingTestSql" value="select CURRENT_DATE" />
 	</bean>  
-	
+<!-- 
+	 
+	 <bean id = "dataSource" class = "com.alibaba.druid.pool.DruidDataSource" destroy-method = "close" >    
+       <property name = "url" value = "${db.dUrl}" />    
+       <property name = "username" value = "${db.username}" />    
+       <property name = "password" value = "${db.password}" />    
+       <property name = "driverClassName" value = "${db.driverClassName}" />    
+       <property name = "filters" value = "${db.filters}" />    
+       <property name = "maxActive" value = "${db.maxActive}" />  
+       <property name = "initialSize" value = "${db.initialSize}" />  
+       <property name = "maxWait" value = "${db.maxWait}" />  
+       <property name = "minIdle" value = "${db.minIdle}" />    
+       <property name = "timeBetweenEvictionRunsMillis" value ="${db.timeBetweenEvictionRunsMillis}" />         
+       <property name = "minEvictableIdleTimeMillis" value ="${db.minEvictableIdleTimeMillis}" />    
+       <property name = "validationQuery" value = "${db.validationQuery}" />    
+       <property name = "testWhileIdle" value = "${db.testWhileIdle}" /> 
+       <property name = "testOnBorrow" value = "${db.testOnBorrow}" />    
+       <property name = "testOnReturn" value = "${db.testOnReturn}" />
+       <property name = "maxOpenPreparedStatements" value ="${db.maxOpenPreparedStatements}" />       
+       <property name = "removeAbandoned" value = "${db.removeAbandoned}" />
+       <property name = "removeAbandonedTimeout" value ="${db.removeAbandonedTimeout}" />       
+       <property name = "logAbandoned" value = "${db.logAbandoned}" />
+  </bean>   -->
+	 
 	<bean id="index_SessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
 		<property name="dataSource">
-			<ref bean="proxoolDataSource" />
+			<ref bean="dataSource" />
 		</property>
 		<property name="hibernateProperties">
 			<props>

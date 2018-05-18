@@ -277,12 +277,13 @@ public class Business implements IBusiness {
 	 * 
 	 * @param latch
 	 * @param page
+	 * @throws InterruptedException 
 	 *
 	 * @变更记录 2018年1月8日 下午11:58:35 李瑞辉 创建
 	 *
 	 */
 	@Override
-	public void updateLocation(CountDownLatch latch, Semaphore semaphore, Properties prop, int page) {
+	public void updateLocation(CountDownLatch latch, Semaphore semaphore, Properties prop, int page) throws InterruptedException {
 		
 		ApplicationContext context = CommonUtil.getSpringApplicationContext();
 		KParam param = (KParam) context.getBean("kParam");
@@ -293,9 +294,11 @@ public class Business implements IBusiness {
 			list = fiDAO.findQyInfoMapByPage(i);
 			if (list != null) {
 				task = new LocationTask(latch, semaphore, prop, list, fiDAO, param);
+				
+				semaphore.acquire();
 				taskExecutor.execute(task);
 			}
-		}
+		}		
 	}
 	
 	/**
@@ -309,17 +312,35 @@ public class Business implements IBusiness {
 		List<QyInfo_Map> list = fiDAO.getListOfMapOn();
 		Runnable task;
 		for (;;) {
-			task = new LocationTaskOn(prop, list, fiDAO, param);			
-			task.run();			
-			if (list != null && list.size() < 10)
-				break;
-			list = fiDAO.getListOfMapOn();			
+			try {
+				task = new LocationTaskOn(prop, list, fiDAO, param);			
+				task.run();
+				if (list != null && list.size() < 10)
+					break;
+				list = fiDAO.getListOfMapOn();
+			} catch (Exception ignore) {
+				
+			} finally {
+				
+			}
 		}		
+	}
+	
+	/**
+	 * 构造30万条企业存入数据库 高并发测试需要
+	 */
+	public void saveQyinfo(String qyname) {
+		fiDAO.saveQyinfo(qyname);
 	}
 	
 	
 	public void setTaskExecutor(ThreadPoolTaskExecutor taskExecutor) {
 		this.taskExecutor = taskExecutor;
+	}
+	
+	public int getLngisnull() {
+		
+		return fiDAO.getLngisnull();
 	}
 
 }

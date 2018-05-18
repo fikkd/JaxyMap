@@ -7,6 +7,7 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.HttpHeaders;
 
 import com.scott.common.KParam;
 import com.scott.dao.FiDAO;
@@ -28,7 +29,8 @@ public class LocationTask implements Runnable {
 	private KParam param;
 	private FiDAO fiDAO;
 
-	public LocationTask(CountDownLatch latch, Semaphore semaphore, Properties prop, List<QyInfo_Map> list, FiDAO fiDAO, KParam param) {
+	public LocationTask(CountDownLatch latch, Semaphore semaphore, Properties prop, List<QyInfo_Map> list, FiDAO fiDAO,
+			KParam param) {
 		this.latch = latch;
 		this.semaphore = semaphore;
 		this.prop = prop;
@@ -40,28 +42,40 @@ public class LocationTask implements Runnable {
 	@Override
 	public void run() {
 		HttpClient client = new HttpClient();
+		client.getHttpConnectionManager().getParams().setConnectionTimeout(7 * 1000); // 连接超时
+		client.getHttpConnectionManager().getParams().setSoTimeout(10 * 1000); // 读取超时
+
 		String url = prop.get("url").toString();
-		for (QyInfo_Map info : list) {
-			setLocation(client, info, url);
+		try {
+			for (QyInfo_Map info : list) {
+				try {
+					setLocation(client, info, url);
+				} catch (Throwable ignore) {
+					ignore.printStackTrace();
+				} finally {
+				}
+			}
+		} finally {
+			semaphore.release();
+			latch.countDown();
 		}
 
-		latch.countDown();
 	}
 
 	// http://api.map.baidu.com/lbsapi/geocoding-api.htm
-	public void setLocation(HttpClient client, QyInfo_Map info, String url) {		 
-		
+	public void setLocation(HttpClient client, QyInfo_Map info, String url) {
+
+
 		GetMethod method = null;
 		try {
-			semaphore.acquire();
-			
 			url = url + java.net.URLEncoder.encode(info.getC_name(), "UTF-8")
 					+ "&output=json&ak=0F6lvW7RH7VsRymFTCT7hYYOYVn5ezWk&city="
 					+ java.net.URLEncoder.encode(param.getCityName(), "UTF-8");
-			
-			method = new GetMethod(url);
 
+			method = new GetMethod(url);
+			method.setRequestHeader(HttpHeaders.CONNECTION, "close");
 			client.executeMethod(method);
+						
 			if (method.getStatusCode() == 200) {
 				String reString = method.getResponseBodyAsString();
 				reString = reString.replaceAll("(?s).*\"lng\":(\\d*\\.\\d*).*\"lat\":(\\d*\\.\\d*).*", "$1,$2");
@@ -71,12 +85,13 @@ public class LocationTask implements Runnable {
 					info.setM_lat(arr[1]);
 					fiDAO.updateMap(info);
 				}
+			} else {
+				// ignore
 			}
 		} catch (Throwable ignore) {
-			ignore.printStackTrace();
+				// ignore
 		} finally {
 			method.releaseConnection();
-			semaphore.release();
 		}
 
 	}

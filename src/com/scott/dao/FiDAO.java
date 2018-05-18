@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -253,12 +254,21 @@ public class FiDAO extends NDAO {
 	}
 	
 	/**
+	 * 
+	 * 查询信用地图专用表经纬度为空的企业数量
+	 */
+	public int getLngisnull() {
+		List<Object> params = new ArrayList<>();
+		return this.findCountBySQLQuery("select count(*) from qyinfo_map where m_lng is null", params.toArray());
+	}
+	
+	/**
 	 * 查询10条信用地图专用表的数据( 排除经纬度为空的数据 )
 	 * 
 	 */
 	@SuppressWarnings("unchecked")
 	public List<QyInfo_Map> getListOfMapOn() {
-		return this.findPageByHql("from QyInfo_Map m where m.m_lng is null or m.m_lat is null and m.m_on != '1'", new Object[] {}, 0, 10);
+		return this.findPageByHql("from QyInfo_Map m where (m.m_lng is null or m.m_lat is null) and m.m_on is null", new Object[] {}, 0, 10);
 	}
 	
 	/**
@@ -363,27 +373,30 @@ public class FiDAO extends NDAO {
 
 		this.update(info);
 		
-/*		
+/*
 		Session session = null;
 		Transaction ts = null;
 		try {
 			session = this.getSessionFactory().openSession();
 			ts = session.beginTransaction();
-			session.createSQLQuery("update qyinfo_map set m_lng = '" + info.getM_lng() + "', m_lat='" + info.getM_lat() + "' where id = '" + info.getId() + "'").executeUpdate();
+			session.createSQLQuery("update qyinfo_map set m_lng = '" + info.getM_lng() + "', m_lat='" + info.getM_lat() + "', m_on='" + info.getM_on() + "' where id = '" + info.getId() + "'").executeUpdate();
 			ts.commit();
 		} catch (Throwable e) {			
 			e.printStackTrace();
-			PrintStream out;
-			try {
-				long f = System.currentTimeMillis();
-				out = new PrintStream(new FileOutputStream(new File("E:\\" + f)), true, "UTF-8");
-				e.printStackTrace(out);
-			} catch (Exception ignore) {
-			}
 		} finally {
 			session.close();
-		}*/
-
+		}	
+		
+*/
+	}
+	
+	public void saveQyinfo(String qyname) {
+				
+		QyInfo_Map info = new QyInfo_Map();
+		String id = UUID.randomUUID().toString().replaceAll("-", "");
+		info.setId(id);
+		info.setC_name(qyname);
+		this.save(info);
 		
 	}
 	

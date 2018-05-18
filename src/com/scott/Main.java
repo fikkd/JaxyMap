@@ -1,7 +1,12 @@
 package com.scott;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -61,12 +66,35 @@ public class Main {
 		
 		stepA(service, map, prop);
 		stepB(service, prop);		
-//		stepC(service);
+		stepC(service);
 		
 		ApplicationContext context = CommonUtil.getSpringApplicationContext();
 		ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) context.getBean("taskExecutor");
 		taskExecutor.shutdown();
 		
+		
+		int all = service.getPageCountOfMap();	// 总量
+		int others = service.getLngisnull();			// 经纬度为空的数据量
+		
+		File file = new File("D:\\map_.txt");
+		BufferedWriter out = null;
+		try {
+			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
+			out.write("{\r\n");
+			out.write("\t总计企业数量: " + all);
+			out.write("\r\n");
+			out.write("\t经纬度为空企业数量: " + others);			
+			out.write("\r\n}");
+		} catch (IOException ignore) {
+		} finally {
+			if (out != null) {
+				try {
+					out.close();
+				} catch (IOException ignore) {
+				}				
+			}
+		}
+	
 	}
 	
 	/**
@@ -75,34 +103,22 @@ public class Main {
 	 *
 	 */
 	private static void stepA(IBusiness service, Map<String, String> map, Properties prop) {
+				
 
-		logger.info("7秒以后进行删除数据");
-		
-		try {
-			Thread.sleep(1000 * 7);
-		} catch (InterruptedException ignore) {
-		}
-		service.deleteMap();
-		logger.info("数据删除完成... 7秒以后重新构造数据");
-		try {
-			Thread.sleep(1000 * 7);
-		} catch (InterruptedException ignore) {
-		}
-		logger.info("第一步开始");
 		CountDownLatch latch = new CountDownLatch(4);
 		try {			
 			service.moveData(latch, map, prop);
 			latch.await();
 		} catch (InterruptedException ignore) {
 			
-		}
+		}		
 		logger.info("第一步完成");
 	}
 	
 	/**
 	 * 第二步
 	 * 查询百度API
-     * 给qyinfo_map表中的企业设置对应的经纬度, 从而方便在地图上展示
+     * 给qyinfo_map表中的企业设置对应的经纬度
 	 */
 	private static void stepB(IBusiness service, Properties prop) {
 		logger.info("第二步开始");
@@ -122,10 +138,11 @@ public class Main {
 		} catch (InterruptedException e) {
 			logger.error(e);
 		}
+		
 				
 		/* 
 		 * 步骤2.2
-		 * 由于百度地图API的并发限制, 第2.1中有一部分企业的经纬度并没有更新成功, 因此需要弥补
+		 * 由于百度地图API的并发限制, 步骤2.1中有一部分企业的经纬度并没有更新成功, 因此需要弥补
 		 * 经过2.1并发调用已经解决了绝大多数的经纬度
 		 * 此步2.2逐条调用百度地图API
 		 * 
@@ -204,5 +221,10 @@ public class Main {
 			
 		}
 	}
+	
+	
+
+
+
 	
 }

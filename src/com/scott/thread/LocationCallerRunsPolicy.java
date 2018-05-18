@@ -17,7 +17,7 @@ public class LocationCallerRunsPolicy implements RejectedExecutionHandler {
 	@Override
 	public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
 		
-		if (!executor.isShutdown()) {			
+		if (!executor.isShutdown()) {		
             r.run();
         }
 	}

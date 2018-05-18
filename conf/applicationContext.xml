@@ -22,10 +22,11 @@
 		</tx:attributes>
 	</tx:advice>
 
+<!-- 	
 	<aop:config>
 		<aop:pointcut id="serviceManagerMethod" expression="execution(* com.scott.service.*.*(..))" />
 		<aop:advisor pointcut-ref="serviceManagerMethod" advice-ref="test_txAdvice" />
-	</aop:config>
+	</aop:config> -->
 	
 	<aop:config>
 		<aop:pointcut id="daoManagerMethod" expression="execution(* com.scott.dao.*.*(..))" />
@@ -50,8 +51,8 @@
 		<property name="maxPoolSize" value="100" />
 		<property name="queueCapacity" value="100" />
 		<property name="rejectedExecutionHandler">
-<!-- 			<bean class="java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy" /> -->
-			<bean class="com.scott.thread.LocationCallerRunsPolicy" />
+			<bean class="java.util.concurrent.ThreadPoolExecutor$DiscardPolicy" />
+<!-- 			<bean class="com.scott.thread.LocationCallerRunsPolicy" /> -->
 		</property>
 	</bean>
 
